@@ -17,6 +17,12 @@ void btn_callback(uint gpio, uint32_t events) {
     else if (gpio == BTN_PIN_G)
       btn_G_flag = 1;
   }
+  else if (events == 0x8) { // rise edge
+    if (gpio == BTN_PIN_R)
+      btn_R_flag = 2;
+    else if (gpio == BTN_PIN_G)
+      btn_G_flag = 2;
+  }
 }
 
 int main() {
@@ -38,14 +44,15 @@ int main() {
 
 
   // callback led r (first)
-gpio_set_irq_enabled_with_callback(BTN_PIN_R, GPIO_IRQ_EDGE_FALL, true,
-    &btn_callback);
+  gpio_set_irq_enabled_with_callback(
+    BTN_PIN_R, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &btn_callback);
 
 // callback led g (nao usar _with_callback)
-gpio_set_irq_enabled(BTN_PIN_G, GPIO_IRQ_EDGE_FALL, true);
+gpio_set_irq_enabled_with_callback(
+  BTN_PIN_G, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &btn_callback);
 
   while (true) {
-    if (btn_R_flag) {
+    if (btn_R_flag == 1) {
       if (gpio_get(LED_PIN_R)) {
         gpio_put(LED_PIN_R, 0);
       } else {
@@ -55,13 +62,13 @@ gpio_set_irq_enabled(BTN_PIN_G, GPIO_IRQ_EDGE_FALL, true);
       btn_R_flag = 0;
     }
 
-    if (btn_G_flag) {
+    if (btn_G_flag == 2) {
       if (gpio_get(LED_PIN_G)) {
         gpio_put(LED_PIN_G, 0);
       } else {
         gpio_put(LED_PIN_G, 1);
       }
-      printf("fall green\n");
+      printf("rise green\n");
       btn_G_flag = 0;
     }
 
